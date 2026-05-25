@@ -1,0 +1,44 @@
+📁 Modern Web Lab (Spring Boot Monolit + MinIO)
+│
+├── 🌐 API Gateway & Reverse Proxy (Nginx)
+│   ├── [Port: 80/443] Dış dünya ile iletişim kuran tek nokta.
+│   ├── Rol 1: Tüm web isteklerini (/login, /dashboard vb.) Spring Boot'a iletir.
+│   └── Rol 2: (İsteğe bağlı) Eğer MinIO'daki public dosyaları doğrudan sunmak istersen /storage isteklerini MinIO'ya yönlendirebilir.
+│
+├── 🛡️ Core Web Application (Java Spring Boot + Thymeleaf)
+│   ├── Port: 8080 (Sadece iç ağda Nginx'e açık)
+│   ├── Arayüz (Frontend): Thymeleaf ile HTML, CSS, JS dosyalarını sunucuda derleyip Nginx'e verir.
+│   ├── İş Mantığı (Backend): Kimlik doğrulama, form işlemleri, dosya yükleme kontrolleri.
+│   └── Bağlantılar: MySQL (Veri), Redis (Oturum) ve MinIO (Dosya) ile haberleşir.
+│
+├── 🪣 Object Storage (MinIO)
+│   ├── Port: 9000 (API - Spring Boot'un dosya gönderdiği port)
+│   ├── Port: 9001 (Web Console - Senin tarayıcıdan girip dosyaları yöneteceğin panel)
+│   └── Rolü: Profil resimleri, kullanıcı yüklemeleri gibi tüm fiziksel dosyaları S3 formatında güvenle saklar.
+│
+├── 📦 Cache & Session Store (Redis)
+│   ├── Port: 6379 (Sadece iç ağda)
+│   └── Rolü: Spring Session ile kullanıcı oturumlarını yönetir, uygulamayı hızlandırır.
+│
+└── 🗄️ İlişkisel Veritabanı (MySQL)
+    ├── Port: 3306 (Sadece iç ağda)
+    └── Rolü: Kullanıcı bilgileri, yetkiler ve MinIO'ya yüklenen dosyaların sadece isimleri/linkleri (Metadata) burada tutulur.
+
+
+----- DOSYA SİSTEMİ -----
+📁 modern-web-lab/
+│
+├── 📄 docker-compose.yml       (Tüm mimariyi ayağa kaldıran ana dosya)
+│
+├── 📁 nginx/
+│   └── 📄 default.conf         (Nginx yönlendirme kuralları)
+│
+├── 📁 spring-app/
+│   ├── 📄 Dockerfile           (Java uygulamasını paketlemek için)
+│   ├── 📄 pom.xml              (Spring Boot bağımlılıkları)
+│   └── 📁 src/                 (Java ve Thymeleaf kodların)
+│
+└── 📁 container-data/          (Konteynerlerin kalıcı verileri buraya yazılacak)
+    ├── 📁 mysql-data/
+    ├── 📁 minio-data/
+    └── 📁 redis-data/
