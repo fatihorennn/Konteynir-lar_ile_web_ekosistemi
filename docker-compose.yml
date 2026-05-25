@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # 1. API Gateway & Reverse Proxy
+  nginx:
+    image: nginx:latest
+    container_name: lab-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend-app
+    networks:
+      - cnt0
+
+  # 2. Ana İş Mantığı (Spring Boot)
+  backend-app:
+    build:
+      context: ./spring-app
+      dockerfile: Dockerfile
+    container_name: lab-spring-backend
+    # DİKKAT: Portu hosta (makinene) bağlamıyoruz.
+    # Nginx 8080 portuna iç ağdan ulaşacak.
+    expose:
+      - "8080"
+    depends_on:
+      - mysql-db
+      - redis-cache
+      - minio-storage
+    networks:
+      - cnt0
+
+  # 3. İlişkisel Veritabanı
+  mysql-db:
+    image: mysql:latest
+    container_name: lab-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Gfk34TRq!
+      MYSQL_DATABASE: lab_db_yzsdfg3
+      MYSQL_USER: lab_user_yzsdfg2
+      MYSQL_PASSWORD: LabPassQ21zty!
+    volumes:
+      - ./container-data/mysql-data:/var/lib/mysql
+    expose:
+      - "3306"
+    networks:
+      - cnt0
+
+  # 4. Önbellek ve Oturum Yönetimi
+  redis-cache:
+    image: redis:latest
+    container_name: lab-redis
+    volumes:
+      - ./container-data/redis-data:/data
+    expose:
+      - "6379"
+    networks:
+      - cnt0
+
+  # 5. Nesne Depolama (S3 Alternatifi)
+  minio-storage:
+    image: minio/minio
+    container_name: lab-minio
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_super_secret
+    command: server /data --console-address ":9001"
+    ports:
+      # MinIO Web paneline tarayıcından erişmek için
+      - "9001:9001"
+    expose:
+      - "9000" # Spring Boot'un dosya yükleyeceği API portu (Sadece iç ağa açık)
+    volumes:
+      - ./container-data/minio-data:/data
+    networks:
+      - cnt0
+
+# Konteynerlerin birbirini bulacağı özel izole ağ
+networks:
+  cnt0:
+    driver: bridge
